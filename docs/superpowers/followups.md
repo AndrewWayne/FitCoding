@@ -2,6 +2,12 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 7 (commit 271c733 — launch.rs)
+
+- **launch.rs:16** — `unwrap_or("squat")` masks a structural impossibility (`EXERCISES` is `[&str; 3]`, never empty). Replace with `.expect("EXERCISES is non-empty")` to document the invariant rather than silently fall back.
+- **Optional**: change `resolve_exercise(arg: Option<String>)` to `Option<&str>` to save `.into()` allocations at test sites and tighten the API. Free since clap can pass either shape.
+- **Optional test**: add explicit "unknown string passes to random" test (e.g. `resolve_exercise(Some("yoga".into()))` must return one of `EXERCISES`). Already covered transitively by the `"random"` test, but worth pinning if `resolve_exercise` is ever called outside clap.
+
 ## From Plan Task 6 (commit b8a3dd6 — main.rs Cmd::Board arm)
 
 - **Inconsistent error message prefix** in main.rs: one site emits `fitcoding: {e}`, the other `fitcoding: failed to read scores: {e}`. Both `default_path` and `load` already carry context via `anyhow::Context`; normalize to a single form using the cause-chain formatter `{e:#}` (e.g. `eprintln!("fitcoding: {e:#}")`).
