@@ -2,6 +2,11 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 6 (commit b8a3dd6 — main.rs Cmd::Board arm)
+
+- **Inconsistent error message prefix** in main.rs: one site emits `fitcoding: {e}`, the other `fitcoding: failed to read scores: {e}`. Both `default_path` and `load` already carry context via `anyhow::Context`; normalize to a single form using the cause-chain formatter `{e:#}` (e.g. `eprintln!("fitcoding: {e:#}")`).
+- Optional: factor a `fn die(e: impl Display) -> !` helper to deduplicate the two `match`-and-exit blocks. Saves ~6 lines.
+
 ## Compiler warnings to clean up before tagging
 
 - `app/src-tauri/src/board.rs:1` — `use crate::scores::{Session, ScoresFile};` flags `Session` as unused at the file level (it's only consumed in `#[cfg(test)] mod tests`). Move `use super::Session;` into the test module to silence cleanly.
