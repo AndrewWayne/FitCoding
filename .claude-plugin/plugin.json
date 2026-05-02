@@ -1,0 +1,8 @@
+{
+  "name": "fitcoding",
+  "version": "0.0.1",
+  "description": "/fit pops a 30-second exercise mini-game; /fit board prints the daily scoreboard.",
+  "author": "AndrewWayne",
+  "license": "MIT",
+  "homepage": "https://github.com/AndrewWayne/FitCoding"
+}
