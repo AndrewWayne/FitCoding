@@ -656,7 +656,7 @@ pub fn format_table(scores: &ScoresFile, today: NaiveDate) -> String {
     for offset in 0..HISTORY_DAYS {
         let day = today - Duration::days(offset);
         let row = totals.get(&day);
-        let mut cells = [String::from("\u{2014}"); 3];
+        let mut cells: [String; 3] = std::array::from_fn(|_| String::from("\u{2014}"));
         for (i, ex) in EXERCISES.iter().enumerate() {
             if let Some(r) = row.and_then(|m| m.get(ex)).copied() {
                 cells[i] = r.to_string();
