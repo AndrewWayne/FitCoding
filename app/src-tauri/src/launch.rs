@@ -41,10 +41,15 @@ fn save_score(exercise: String, reps: u32) -> Result<(), String> {
     scores::append(&path, session).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn log(message: String) {
+    eprintln!("[webview] {message}");
+}
+
 pub fn run(chosen: &'static str) {
     tauri::Builder::default()
         .manage(AppState { chosen_exercise: Mutex::new(chosen) })
-        .invoke_handler(tauri::generate_handler![get_exercise, save_score])
+        .invoke_handler(tauri::generate_handler![get_exercise, save_score, log])
         .setup(|app| {
             // Reveal the window now that state is ready (it's hidden in tauri.conf.json).
             if let Some(window) = app.get_webview_window("main") {
