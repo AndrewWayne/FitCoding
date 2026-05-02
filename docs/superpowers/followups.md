@@ -2,6 +2,12 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 13 (commit 0706799 — jumping_jack.ts)
+
+- **Asymmetric-ratio test gap**: tests cover `closed→opened` and `closed→halfway→closed`, but never the dual-ratio AND condition's failure modes. Add a test where wrists open but ankles stay closed (or vice versa) and assert `reps === 0` — pins the AND semantics that distinguish jumping_jack from squat/pushup.
+- **`progress` vs `phase` boundary mismatch**: `progress` averages the two ratios (so reaches 1 before phase flips) while `phase` requires BOTH to exceed `OPEN_RATIO`. Squat/pushup don't have this gap. Either base `progress` on `Math.min(wristRatio, ankleRatio)` to align, or document the intentional difference inline.
+- **Add test for divide-by-zero guards** (`shoulderWidth > 0 ? ... : 0`): construct `landmarksWithGeom({shoulderWidth: 0, hipWidth: 0, wristGap: 0.3, ankleGap: 0.3})`, assert `update()` doesn't throw and returns a defensible `phase`.
+
 ## From Plan Task 12 (commit ca51f56 — pushup.ts)
 
 - **Refactor: extract angle-based state-machine helper for squat + pushup**. The two modules share ~95% identical code (factory shape, `clamp01`, state-machine block, L/R averaging). Extract `app/src/exercises/angle-state-machine.ts` with signature `createAngleRepCounter({name, formCue, downThreshold, upThreshold, measureAngle})` so squat/pushup collapse to ~10 lines each. Apply visibility + ready-phase fixes once at the helper level. Note: jumping_jack (Task 13) uses distance ratios not angles — it won't fit this helper, but will share the closure-state + clamp01 pattern with its own counterpart helper. Worth doing before tagging v0.0.1.
