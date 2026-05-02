@@ -31,7 +31,22 @@ fn main() {
             println!("(stub) launch exercise={:?}", exercise);
         }
         Cmd::Board => {
-            println!("(stub) board");
+            let path = match scores::default_path() {
+                Ok(p) => p,
+                Err(e) => {
+                    eprintln!("fitcoding: {e}");
+                    std::process::exit(1);
+                }
+            };
+            let data = match scores::load(&path) {
+                Ok(d) => d,
+                Err(e) => {
+                    eprintln!("fitcoding: failed to read scores: {e}");
+                    std::process::exit(1);
+                }
+            };
+            let today = chrono::Local::now().date_naive();
+            print!("{}", board::format_table(&data, today));
         }
     }
 }
