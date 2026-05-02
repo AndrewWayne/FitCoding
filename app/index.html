@@ -7,7 +7,22 @@
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div id="left-panel">
+        <canvas id="pixelman" width="240" height="240"></canvas>
+        <div id="exercise-name">—</div>
+        <div id="form-cue"></div>
+      </div>
+      <div id="right-panel">
+        <video id="cam" autoplay muted playsinline></video>
+        <canvas id="skeleton" width="400" height="400"></canvas>
+        <div id="hud">
+          <div class="hud-stat">reps: <span id="rep-count">0</span></div>
+          <div class="hud-stat"><span id="time-left">00:30</span></div>
+        </div>
+      </div>
+      <div id="overlay" class="hidden"></div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

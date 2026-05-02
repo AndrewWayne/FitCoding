@@ -6,3 +6,79 @@ body {
   font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
   overflow: hidden;
 }
+
+#app {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+}
+
+#left-panel, #right-panel {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+#left-panel {
+  background: #15171a;
+  border-right: 1px solid #2a2d33;
+}
+
+#pixelman {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  width: 240px;
+  height: 240px;
+  background: #0a0a0a;
+}
+
+#exercise-name {
+  margin-top: 16px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+#form-cue {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+  max-width: 240px;
+}
+
+#right-panel { position: relative; }
+#cam, #skeleton {
+  width: 360px;
+  height: 360px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+#cam { transform: scaleX(-1); }
+#skeleton { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); pointer-events: none; }
+
+#hud {
+  margin-top: 8px;
+  display: flex;
+  gap: 24px;
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+}
+.hud-stat span { font-weight: 700; }
+
+#overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-weight: 800;
+  text-align: center;
+  z-index: 10;
+}
+#overlay.hidden { display: none; }
