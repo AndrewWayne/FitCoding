@@ -10,6 +10,9 @@ dist/
 target/
 **/*.rs.bk
 
+# Tauri-generated schemas (regenerated on each build)
+app/src-tauri/gen/
+
 # OS
 .DS_Store
 Thumbs.db
