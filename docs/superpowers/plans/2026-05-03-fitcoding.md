@@ -236,6 +236,8 @@ git commit -m "scaffold: vite + typescript frontend skeleton"
 - Create: `app/src-tauri/build.rs`
 - Create: `app/src-tauri/tauri.conf.json`
 - Create: `app/src-tauri/src/main.rs`
+- Create: `app/src-tauri/icons/icon.ico` (Windows requires this even when bundling is off — see Step 3a)
+- Modify: `.gitignore` (add `app/src-tauri/gen/`)
 
 - [ ] **Step 1: Create `app/src-tauri/Cargo.toml`**
 
@@ -314,12 +316,36 @@ fn main() {
     }
   },
   "bundle": {
-    "active": false
+    "active": false,
+    "icon": ["icons/icon.ico"]
   }
 }
 ```
 
-Note: `visible: false` because `launch.rs` will show the window programmatically only after the exercise has been picked. `bundle.active: false` because v0.0.1 ships bare binaries (the GitHub Actions workflow runs `cargo build --release` and zips the resulting executable directly); we don't generate installers, so we don't need an icon. Re-enabling bundling for installers is a v2 task.
+Note: `visible: false` because `launch.rs` will show the window programmatically only after the exercise has been picked. `bundle.active: false` because v0.0.1 ships bare binaries (the GitHub Actions workflow runs `cargo build --release` and zips the resulting executable directly), and we don't generate installers. **However** — `tauri-build` on Windows still embeds an .ico as a Win32 resource into the .exe regardless of bundling, so we must point `bundle.icon` at a real file. Re-enabling installers (and proper icon art) is a v2 task.
+
+- [ ] **Step 3a: Generate placeholder icon**
+
+```bash
+pip install --quiet pillow
+mkdir -p app/src-tauri/icons
+python -c "
+from PIL import Image
+img = Image.new('RGBA', (256, 256), (40, 40, 50, 255))
+img.save('app/src-tauri/icons/icon.ico', sizes=[(16,16),(32,32),(48,48),(256,256)])
+"
+```
+
+Expected: `app/src-tauri/icons/icon.ico` exists, ~1-5 KB, contains 4 size frames. Pillow's PNG-compressed multi-size .ico is what tauri-build wants.
+
+- [ ] **Step 3b: Append `app/src-tauri/gen/` to root `.gitignore`**
+
+`tauri-build` regenerates schema files under `app/src-tauri/gen/` on every build. Append to `.gitignore`:
+
+```
+# Tauri-generated schemas (regenerated on each build)
+app/src-tauri/gen/
+```
 
 - [ ] **Step 4: Create `app/src-tauri/src/main.rs` (minimal stub)**
 
@@ -343,8 +369,10 @@ Expected stdout: `fitcoding stub - subcommands wired in Task 5`
 
 - [ ] **Step 7: Commit**
 
+`Cargo.lock` should be committed for reproducibility — this is a binary crate, not a library.
+
 ```bash
-git add app/src-tauri/Cargo.toml app/src-tauri/build.rs app/src-tauri/tauri.conf.json app/src-tauri/src/main.rs
+git add app/src-tauri/Cargo.toml app/src-tauri/build.rs app/src-tauri/tauri.conf.json app/src-tauri/src/main.rs app/src-tauri/icons/icon.ico app/src-tauri/Cargo.lock .gitignore
 git commit -m "scaffold: tauri 2 + clap + serde rust crate"
 ```
 
