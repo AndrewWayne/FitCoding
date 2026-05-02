@@ -2,6 +2,7 @@
 
 mod scores;
 mod board;
+mod launch;
 
 use clap::{Parser, Subcommand};
 
@@ -28,7 +29,8 @@ fn main() {
     let cli = Cli::parse();
     match cli.command.unwrap_or(Cmd::Launch { exercise: None }) {
         Cmd::Launch { exercise } => {
-            println!("(stub) launch exercise={:?}", exercise);
+            let chosen = launch::resolve_exercise(exercise);
+            println!("(stub) launch chose exercise={chosen}");
         }
         Cmd::Board => {
             let path = match scores::default_path() {
