@@ -2,6 +2,14 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 21 (commit 9be94f3 — main.ts orchestration)
+
+- **HIGH PRIORITY (fix before tagging v0.0.1)** — main.ts:67 stale skeleton bug. When `pose.detect()` returns null, the form-cue updates to "Step into frame" but `webcam.drawSkeleton(null)` is never called, so the last-known skeleton stays painted on the canvas. Visually contradictory ("Step into frame" + skeleton still drawn). One-line fix: add `webcam.drawSkeleton(null);` before the `cueEl.textContent = "Step into frame"` line. The `Webcam` interface was designed to accept null exactly for this case.
+- **Shadow `.js` files in `app/src/`**: working tree has stale `*.js` co-located with `*.ts` (likely from a prior `tsc` invocation). Vitest discovers tests twice (29 unique → 58 reported). Add `app/src/**/*.js` to root `.gitignore`, then `find app/src -name "*.js" -delete`.
+- **`frameTimestamp += 33` precision (v0.0.2)**: rAF fires at ~16.67ms but increment is fixed 33ms — MediaPipe perceives the video as half-speed. Swap to `performance.now()` for accurate temporal smoothing.
+- **`cueEl.textContent = exercise.formCue` runs every frame** on the success path. Negligible (4-char string, no reflow), but could be set once after countdown and only overwritten when entering "Step into frame".
+- **No teardown of `pixelMan` sprite reference**: `HTMLImageElement` GC'd when `pixelMan` goes out of scope at function exit, fine for v1; for symmetry, null the sprite in a webview-close handler.
+
 ## From Plan Task 20 (commit 1c4b0aa — launch.rs Tauri IPC)
 
 - **Drop `Mutex<&'static str>` post-v0.0.1**: cell is read-only in v1; `&'static str` is `Sync` on its own. Simplify to `manage(chosen)` + `state: State<'_, &'static str>`.
