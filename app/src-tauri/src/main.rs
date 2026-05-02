@@ -30,7 +30,7 @@ fn main() {
     match cli.command.unwrap_or(Cmd::Launch { exercise: None }) {
         Cmd::Launch { exercise } => {
             let chosen = launch::resolve_exercise(exercise);
-            println!("(stub) launch chose exercise={chosen}");
+            launch::run(chosen);
         }
         Cmd::Board => {
             let path = match scores::default_path() {
