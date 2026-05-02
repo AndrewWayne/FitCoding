@@ -2,6 +2,12 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 18 (commit 4812144 — timer.ts)
+
+- **Cadence docstring lies**: `runSessionTimer` says "about 10x/second" but it's `requestAnimationFrame`, so 60-120 Hz. Fix to "once per animation frame" or "at the display refresh rate".
+- **Add fake-timer tests for timer factories**: vitest `vi.useFakeTimers()` + stubbed `requestAnimationFrame` could cheaply test (a) intro countdown calls onTick in order at 700ms intervals, (b) cancel mid-sequence prevents subsequent ticks, (c) session timer resolves at exactly durationMs and clamps remainingMs >= 0.
+- **Document sync first tick**: `runIntroCountdown` fires `onTick("3")` synchronously inside the promise constructor before returning the handle. Add JSDoc `@remarks First label fires synchronously` for callers who want pre-mount-aware tick handlers.
+
 ## From Plan Task 17 (commit 82e8437 — pixelman.ts) — apply at Task 21
 
 - **Await sprite preload**: `pixelMan.draw()` no-ops silently when the sprite isn't loaded. Task 21's main.ts must `await pixelMan.setSpriteUrl(...)` before entering the rAF loop, otherwise the canvas stays blank until the image loads.
