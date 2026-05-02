@@ -2,6 +2,10 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 19 (commit cfd9bb5 — overlay.ts)
+
+- **Add a jsdom unit test** for `showScore` to lock down the `PRETTY_NAMES` mapping and the "Congrats! N exercises in 30s" string format. Vitest's jsdom env is already configured. ~10 lines covers all three exercise labels + the unknown-name fallback path. Cheap regression guard.
+
 ## From Plan Task 18 (commit 4812144 — timer.ts)
 
 - **Cadence docstring lies**: `runSessionTimer` says "about 10x/second" but it's `requestAnimationFrame`, so 60-120 Hz. Fix to "once per animation frame" or "at the display refresh rate".
