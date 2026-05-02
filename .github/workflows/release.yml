@@ -4,9 +4,16 @@ on:
   push:
     tags:
       - "v*.*.*"
+  # Allow manual trigger for CI smoke-testing on a branch.
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+# Don't race tag re-pushes against each other; let the first finish.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -39,7 +46,18 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libjavascriptcoregtk-4.1-dev \
+            libsoup-3.0-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
 
       - uses: actions/setup-node@v4
         with:
@@ -49,6 +67,10 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+
       - name: Install frontend deps
         working-directory: app
         run: npm ci
@@ -57,9 +79,15 @@ jobs:
         working-directory: app
         run: npm run build
 
+      - name: Verify frontendDist exists
+        shell: bash
+        run: |
+          ls -la app/dist
+          test -f app/dist/index.html
+
       - name: Build Rust binary
         working-directory: app/src-tauri
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --locked --target ${{ matrix.target }} --verbose
 
       - name: Package archive
         shell: bash
@@ -85,8 +113,11 @@ jobs:
 
   release:
     needs: build
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
     steps:
+      # Note: no actions/checkout — softprops/action-gh-release uses the
+      # GitHub API to attach assets to the tag, no local refs needed.
       - uses: actions/download-artifact@v4
         with:
           path: dist
