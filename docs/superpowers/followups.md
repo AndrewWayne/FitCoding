@@ -2,6 +2,14 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 24 (commit 910081f — fit.ps1)
+
+- **`-WindowStyle Hidden` is semantically wrong** for Tauri launch — Tauri opens its own visible GUI window; the `-WindowStyle` flag affects only console-mode parents. Drop the flag: `Start-Process -FilePath $Bin -ArgumentList "launch"` returns immediately and doesn't hide anything.
+- **ARM64 Windows is silently mis-detected as x64**. `OSArchitecture` returns `"ARM 64-bit Processor"` which matches `*64-bit*` and routes to `x86_64-pc-windows-msvc`. The x64 binary runs under emulation so it "works," but blocks any future native ARM build. Fix: switch to `$env:PROCESSOR_ARCHITECTURE` (returns `AMD64` / `ARM64` / `x86`) and explicitly handle each, or fail loudly on ARM64 until the native build exists.
+- **Temp-file leak on download failure**: `Invoke-WebRequest` throw bypasses `Remove-Item $zip`. Wrap in `try { ... } finally { if (Test-Path $zip) { Remove-Item $zip -Force } }`.
+- **Default branch double-signals** with `Write-Error` + `exit 1` under `ErrorActionPreference = "Stop"`. Use `[Console]::Error.WriteLine(...)` + `exit 1`, or `throw`.
+- **Verify Task 26's release pipeline produces `.zip` for Windows AND `.tar.gz` for Unix** — fit.ps1 expects `.zip`, fit.sh expects `.tar.gz`.
+
 ## From Plan Task 22 (commit 613616c — plugin.json + fit.md)
 
 - **Windows bash dependency**: `.claude-plugin/commands/fit.md` invokes `bash "${CLAUDE_PLUGIN_ROOT}/scripts/fit.sh"`. Claude Code on Windows does NOT bundle Git Bash. README must document Git Bash or WSL as an install prerequisite. Optionally enhance the bootstrap chain to detect missing bash and print a one-line install hint.
