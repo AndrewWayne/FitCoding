@@ -142,10 +142,10 @@ export interface ExerciseModule {
 
 `progress` is a normalized scalar derived from the same joint angle that drives `phase`: 0 when the user is fully in the "up" position, 1 when fully in "down" (or vice versa for jumping_jack: 0 = closed, 1 = fully open). The pixel-man canvas picks sprite frame `floor(progress * 4)` so the sprite tracks the user's tempo continuously across 4 frames per rep, not just at the two phase flips.
 
-State machines for v1:
-- **squat**: hip-knee angle. `down` when angle < 100°, `up` when > 160°. Rep on down→up transition. `progress = clamp((160° − angle) / (160° − 100°), 0, 1)`.
-- **jumping_jack**: wrist-distance ÷ shoulder-width AND ankle-distance ÷ hip-width. `open` when both ratios > 1.5×, `closed` when both < 1.0×. Rep on closed→open transition. `progress` is the average of the two ratios, clamped and normalized to `[1.0×, 1.5×]`.
-- **pushup**: elbow angle. `down` when angle < 90°, `up` when > 160°. Rep on down→up transition. `progress = clamp((160° − angle) / (160° − 90°), 0, 1)`.
+State machines for v1 (lenient defaults — partial-ROM reps still count, since the goal is "interrupt sedentary work for 30s," not enforce gym form):
+- **squat**: hip-knee angle. `down` when angle < 120°, `up` when > 150°. Rep on down→up transition. `progress = clamp((150° − angle) / (150° − 120°), 0, 1)`.
+- **jumping_jack**: wrist-distance ÷ shoulder-width AND ankle-distance ÷ hip-width. `open` when both ratios > 1.3×, `closed` when both < 1.1×. Rep on closed→open transition. `progress` is the average of the two ratios, clamped and normalized to `[1.1×, 1.3×]`.
+- **pushup**: elbow angle. `down` when angle < 110°, `up` when > 150°. Rep on down→up transition. `progress = clamp((150° − angle) / (150° − 110°), 0, 1)`.
 
 `phase: "ready"` is the initial state before the first rep is detected — used by the UI to show "GO!" until the first transition.
 
