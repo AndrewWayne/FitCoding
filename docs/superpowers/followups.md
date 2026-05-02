@@ -2,6 +2,12 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 16 (commit e537e60 — webcam.ts)
+
+- **MUST VERIFY at end-to-end smoke test (Task 28)**: webcam stream is requested at 640×480 (4:3) but displayed at 360×360 (1:1) via CSS `object-fit: cover`, which center-crops 80px from each side. MediaPipe landmarks are normalized over the full 4:3 frame, so landmarks near the cropped edges may render outside the visible video region. If skeleton visibly drifts during smoke test, fix by requesting a square stream (`getUserMedia({video: {width: 480, height: 480}})`) or by accounting for the crop offset in `drawSkeleton`.
+- **Visibility threshold extraction**: hardcoded `0.3` at two call sites in webcam.ts. If exercise modules in Tasks 11-13 also need a visibility gate (currently they don't but should — see existing follow-up), extract `VISIBILITY_THRESHOLD` to `pose/constants.ts`.
+- **Webcam interface lacks JSDoc**: add `@throws` notes to `start()` so Task 21's main.ts implementer knows to handle camera-permission denials.
+
 ## From Plan Task 15 (commit ad0d00d — pose/index.ts)
 
 - **Pin `@mediapipe/tasks-vision` exactly**: `package.json` has `^0.10.14` (caret) but the WASM CDN URL is hardcoded `@0.10.14`. If npm resolves a newer minor, the JS shim and WASM blobs diverge → confusing runtime errors. Either pin to `0.10.14` exact, or derive the version from `package.json` at build time.
