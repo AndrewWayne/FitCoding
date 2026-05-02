@@ -2,6 +2,12 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 11 (commit 14069f2 — squat.ts) — applies to all 3 exercise modules
+
+- **Visibility ignored across squat / pushup / jumping_jack**: MediaPipe returns landmarks even for occluded joints (often stale `(x, y, z)` near origin). Currently all three modules average left+right angles without checking `landmark.visibility`, which can cause spurious phase transitions when a user steps partly out of frame. Solve once at the rep-counter layer (e.g. only use limbs above a `VIS_MIN = 0.5` threshold; if both sides invisible, return `{reps, phase, progress: 0}` without state change). Touch all three modules in one follow-up commit.
+- **`"ready"` phase semantics**: `RepPhase = "ready" | "down" | "up"` admits `"ready"`, but no branch in any `update()` produces it — it's only the pre-first-frame value, immediately overwritten. Two options: (a) drop `"ready"` from the type and initialize `phase` as `"up"`, or (b) document `"ready"` as transient. Test names like `"starts in 'ready' with zero reps"` actually assert `phase === "up"` — fix the test name or the implementation, not both.
+- **`landmarks.length < 33` guard**: defensive one-liner at the top of each `update()` to prevent crashes if MediaPipe ever returns a partial result.
+
 ## From Plan Task 9 (commit 28db305 — angles.ts)
 
 - **Zero-magnitude sentinel**: `angleAtVertex` returns `0` when one of the rays has zero magnitude. `0` is also a valid result (collinear-same-side), so callers can't distinguish degenerate input from a real 0° pose. Consider returning `NaN` — propagates naturally and forces consumers to handle the case explicitly. Coordinate the change with all callers in Tasks 11-13 if changing.
