@@ -2,6 +2,10 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 12 (commit ca51f56 — pushup.ts)
+
+- **Refactor: extract angle-based state-machine helper for squat + pushup**. The two modules share ~95% identical code (factory shape, `clamp01`, state-machine block, L/R averaging). Extract `app/src/exercises/angle-state-machine.ts` with signature `createAngleRepCounter({name, formCue, downThreshold, upThreshold, measureAngle})` so squat/pushup collapse to ~10 lines each. Apply visibility + ready-phase fixes once at the helper level. Note: jumping_jack (Task 13) uses distance ratios not angles — it won't fit this helper, but will share the closure-state + clamp01 pattern with its own counterpart helper. Worth doing before tagging v0.0.1.
+
 ## From Plan Task 11 (commit 14069f2 — squat.ts) — applies to all 3 exercise modules
 
 - **Visibility ignored across squat / pushup / jumping_jack**: MediaPipe returns landmarks even for occluded joints (often stale `(x, y, z)` near origin). Currently all three modules average left+right angles without checking `landmark.visibility`, which can cause spurious phase transitions when a user steps partly out of frame. Solve once at the rep-counter layer (e.g. only use limbs above a `VIS_MIN = 0.5` threshold; if both sides invisible, return `{reps, phase, progress: 0}` without state change). Touch all three modules in one follow-up commit.
