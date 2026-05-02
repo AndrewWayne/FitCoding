@@ -2,6 +2,10 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 22 (commit 613616c — plugin.json + fit.md)
+
+- **Windows bash dependency**: `.claude-plugin/commands/fit.md` invokes `bash "${CLAUDE_PLUGIN_ROOT}/scripts/fit.sh"`. Claude Code on Windows does NOT bundle Git Bash. README must document Git Bash or WSL as an install prerequisite. Optionally enhance the bootstrap chain to detect missing bash and print a one-line install hint.
+
 ## From Plan Task 21 (commit 9be94f3 — main.ts orchestration)
 
 - **HIGH PRIORITY (fix before tagging v0.0.1)** — main.ts:67 stale skeleton bug. When `pose.detect()` returns null, the form-cue updates to "Step into frame" but `webcam.drawSkeleton(null)` is never called, so the last-known skeleton stays painted on the canvas. Visually contradictory ("Step into frame" + skeleton still drawn). One-line fix: add `webcam.drawSkeleton(null);` before the `cueEl.textContent = "Step into frame"` line. The `Webcam` interface was designed to accept null exactly for this case.
