@@ -2,6 +2,14 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 20 (commit 1c4b0aa — launch.rs Tauri IPC)
+
+- **Drop `Mutex<&'static str>` post-v0.0.1**: cell is read-only in v1; `&'static str` is `Sync` on its own. Simplify to `manage(chosen)` + `state: State<'_, &'static str>`.
+- **Log window-reveal errors in `setup`**: currently `.show().ok()` swallows two failure modes (missing window, OS show failure) silently. Replace with explicit `match`/`if let Err` + `eprintln!` so a user reporting "nothing happened" leaves a stderr trail.
+- **`build.rs` requires `app/dist/`**: `tauri::generate_context!` reads `frontendDist: ../dist` at compile time. Bare `cargo build` from `app/src-tauri/` fails confusingly without a prior `npm run build`. Document in README (Task 27) or have a `build.rs` shim run `npm run build` (latter has trade-offs around `npm` on PATH).
+- **Local-time midnight crossing**: `Local::now().date_naive()` for the score date means a session starting at 23:59:55 and ending at 00:00:25 saves under yesterday's date. Document in README "Known Limitations".
+- **Task 21 reminder**: `main.ts` must `.catch()` the `save_score` invoke promise to avoid an unhandled rejection if disk write fails.
+
 ## From Plan Task 19 (commit cfd9bb5 — overlay.ts)
 
 - **Add a jsdom unit test** for `showScore` to lock down the `PRETTY_NAMES` mapping and the "Congrats! N exercises in 30s" string format. Vitest's jsdom env is already configured. ~10 lines covers all three exercise labels + the unknown-name fallback path. Cheap regression guard.
