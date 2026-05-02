@@ -2,6 +2,12 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 5 (commit 32b4c1b — board.rs)
+
+- **board.rs test `sums_multiple_sessions_for_same_day_and_exercise`** — `today_row.contains("5")` passes only because 22 doesn't contain 5. Change a fixture value and the test passes for the wrong reason. Replace with a tokenized check (split row by whitespace, compare cells) or assert against the exact padded substring.
+- **Test gaps in board.rs**: add tests for (a) all 7 days populated — locks the `0..HISTORY_DAYS` loop bounds, (b) grand total spans multiple days, (c) sessions older than 7 days are excluded from TOTAL.
+- **Header column 1 unlabeled** — first cell in header row is `""`. A one-word header like `"date"` would make `/fit board` output self-explanatory.
+
 ## From Plan Task 4 (commit a035560 — scores.rs)
 
 - **scores.rs:38-40** — Drop the dead `if current.version == 0 { current.version = 1; }` branch in `append`. Reachable only via `ScoresFile::default()` round-trip, not via the public API. If schema migrations are ever needed, do them in `load` with explicit version dispatch.
