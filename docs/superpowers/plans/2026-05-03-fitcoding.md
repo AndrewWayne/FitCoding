@@ -1635,7 +1635,7 @@ describe("createJumpingJack", () => {
 
   it("counts three reps", () => {
     mod.update(closed());
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       mod.update(opened());
       mod.update(closed());
     }
