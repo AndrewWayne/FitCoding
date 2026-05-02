@@ -2,6 +2,12 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 15 (commit ad0d00d — pose/index.ts)
+
+- **Pin `@mediapipe/tasks-vision` exactly**: `package.json` has `^0.10.14` (caret) but the WASM CDN URL is hardcoded `@0.10.14`. If npm resolves a newer minor, the JS shim and WASM blobs diverge → confusing runtime errors. Either pin to `0.10.14` exact, or derive the version from `package.json` at build time.
+- **Worker-based pose detection (v0.0.2)**: `detectForVideo` is sync and runs on the rAF loop thread. On low-end GPUs falling back to CPU, frame drops are likely. MediaPipe ≥0.10 supports `OffscreenCanvas`/Worker — move detection there before tagging.
+- **Offline bundle (v0.0.2)**: model URL hardcodes `/1/pose_landmarker_lite.task` from Google's CDN. For full offline support, vendor the WASM + .task file into the build.
+
 ## From Plan Task 13 (commit 0706799 — jumping_jack.ts)
 
 - **Asymmetric-ratio test gap**: tests cover `closed→opened` and `closed→halfway→closed`, but never the dual-ratio AND condition's failure modes. Add a test where wrists open but ankles stay closed (or vice versa) and assert `reps === 0` — pins the AND semantics that distinguish jumping_jack from squat/pushup.
