@@ -8,6 +8,13 @@ const SKELETON_EDGES: ReadonlyArray<readonly [number, number]> = [
 
 const VIDEO_DISPLAY_SIZE = 360;
 
+// Per-device timeouts (ms). Tuned for typical Windows + Phone Link behavior:
+// the virtual camera "connects" near-instantly with a black stream, so we need
+// to validate FRAMES not just connection.
+const GET_USER_MEDIA_TIMEOUT_MS = 5000;
+const PLAYING_TIMEOUT_MS = 3000;
+const FRAME_SETTLE_MS = 300;
+
 export interface Webcam {
   video: HTMLVideoElement;
   start(onStatus?: (msg: string) => void): Promise<void>;
@@ -43,6 +50,7 @@ export function createWebcam(
       // Deprioritize obvious virtual/phone-link cameras. Real hardware labels
       // usually include a USB vendor:product ID (e.g. "(30c9:00c9)") or vendor name;
       // virtual cameras advertise "Virtual Camera" / "OBS" / "Phone" / "Companion".
+      // Heuristic only — frame-content validation below is the real safety net.
       const looksVirtual = (label: string) =>
         /phone|connected camera|companion|virtual camera|obs/i.test(label);
       videoInputs = [
@@ -59,8 +67,9 @@ export function createWebcam(
         const device = videoInputs[i]!;
         const label = device.label || `cam${i}`;
         status(`Trying ${i + 1}/${videoInputs.length}: ${label.slice(0, 30)}`);
+        let candidate: MediaStream | null = null;
         try {
-          stream = await Promise.race([
+          candidate = await Promise.race([
             navigator.mediaDevices.getUserMedia({
               video: {
                 deviceId: { exact: device.deviceId },
@@ -70,43 +79,38 @@ export function createWebcam(
               audio: false,
             }),
             new Promise<MediaStream>((_, reject) =>
-              setTimeout(() => reject(new Error(`timeout 5s`)), 5000),
+              setTimeout(() => reject(new Error(`getUserMedia timeout ${GET_USER_MEDIA_TIMEOUT_MS}ms`)), GET_USER_MEDIA_TIMEOUT_MS),
             ),
           ]);
-          status(`Connected: ${label.slice(0, 30)}`);
+          videoEl.srcObject = candidate;
+          await waitForPlaying(videoEl, PLAYING_TIMEOUT_MS);
+          status(`Validating frames from ${label.slice(0, 30)}…`);
+          await new Promise<void>((r) => setTimeout(r, FRAME_SETTLE_MS));
+          const liveness = sampleFrameLiveness(videoEl);
+          console.log(`[fitcoding]   liveness check: range=${liveness.range} mean=${liveness.mean} alive=${liveness.alive}`);
+          if (!liveness.alive) {
+            status(`Camera ${i + 1} produces dead frames (range=${liveness.range}), trying next…`);
+            candidate.getTracks().forEach((t) => t.stop());
+            videoEl.srcObject = null;
+            candidate = null;
+            continue;
+          }
+          stream = candidate;
+          status(`✓ ${label.slice(0, 30)}`);
           break;
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
           console.warn(`[fitcoding] camera ${label} failed:`, e);
           status(`Camera ${i + 1} failed: ${msg.slice(0, 60)}`);
           lastError = e;
-          stream = null;
+          candidate?.getTracks().forEach((t) => t.stop());
+          videoEl.srcObject = null;
         }
       }
       if (!stream) {
-        throw new Error(`no camera worked (last: ${lastError})`);
+        throw new Error(`no usable camera (last: ${lastError})`);
       }
-      status(`Tracks: ${stream.getVideoTracks().map(t => t.label).join(", ").slice(0, 60)}`);
-      videoEl.srcObject = stream;
-      await new Promise<void>((resolve, reject) => {
-        const onPlaying = () => {
-          videoEl.removeEventListener("playing", onPlaying);
-          videoEl.removeEventListener("error", onError);
-          console.log("[fitcoding] video 'playing' event, readyState=", videoEl.readyState, "size=", videoEl.videoWidth, "x", videoEl.videoHeight);
-          resolve();
-        };
-        const onError = (e: Event) => {
-          videoEl.removeEventListener("playing", onPlaying);
-          videoEl.removeEventListener("error", onError);
-          reject(new Error("video element error: " + (e as ErrorEvent).message));
-        };
-        videoEl.addEventListener("playing", onPlaying);
-        videoEl.addEventListener("error", onError);
-        videoEl.play().catch((e) => {
-          console.error("[fitcoding] videoEl.play() rejected:", e);
-          reject(e);
-        });
-      });
+      console.log("[fitcoding] using tracks:", stream.getVideoTracks().map((t) => t.label).join(", "));
     },
 
     drawSkeleton(landmarks: PoseLandmarks | null) {
@@ -153,4 +157,80 @@ export function createWebcam(
       videoEl.srcObject = null;
     },
   };
+}
+
+function waitForPlaying(videoEl: HTMLVideoElement, timeoutMs: number): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const cleanup = () => {
+      if (timer) clearTimeout(timer);
+      videoEl.removeEventListener("playing", onPlaying);
+      videoEl.removeEventListener("error", onError);
+    };
+    const onPlaying = () => {
+      cleanup();
+      console.log("[fitcoding] video 'playing' event, readyState=", videoEl.readyState, "size=", videoEl.videoWidth, "x", videoEl.videoHeight);
+      resolve();
+    };
+    const onError = (e: Event) => {
+      cleanup();
+      reject(new Error("video element error: " + (e as ErrorEvent).message));
+    };
+    videoEl.addEventListener("playing", onPlaying);
+    videoEl.addEventListener("error", onError);
+    timer = setTimeout(() => {
+      cleanup();
+      reject(new Error(`playing event timeout ${timeoutMs}ms`));
+    }, timeoutMs);
+    videoEl.play().catch((e) => {
+      cleanup();
+      console.error("[fitcoding] videoEl.play() rejected:", e);
+      reject(e);
+    });
+  });
+}
+
+interface Liveness {
+  alive: boolean;
+  range: number;
+  mean: number;
+}
+
+/**
+ * Sample a 4×4 grid from a downscaled snapshot of the video. Real cameras emit
+ * sensor noise even in a dark room, so a non-trivial brightness range is the
+ * cheapest tell that the stream is real. Phone-Link's sleeping-phone stream
+ * produces computationally uniform output that this catches.
+ */
+function sampleFrameLiveness(videoEl: HTMLVideoElement): Liveness {
+  const off = document.createElement("canvas");
+  off.width = 64;
+  off.height = 48;
+  const offCtx = off.getContext("2d", { willReadFrequently: true });
+  if (!offCtx) return { alive: false, range: 0, mean: 0 };
+  if (videoEl.videoWidth === 0 || videoEl.videoHeight === 0) {
+    return { alive: false, range: 0, mean: 0 };
+  }
+  offCtx.drawImage(videoEl, 0, 0, off.width, off.height);
+  const data = offCtx.getImageData(0, 0, off.width, off.height).data;
+  let min = 255, max = 0, sum = 0, count = 0;
+  for (let y = 6; y < off.height - 4; y += 12) {
+    for (let x = 8; x < off.width - 4; x += 12) {
+      const i = (y * off.width + x) * 4;
+      const a = data[i] ?? 0;
+      const b = data[i + 1] ?? 0;
+      const c = data[i + 2] ?? 0;
+      const brightness = (a + b + c) / 3;
+      if (brightness < min) min = brightness;
+      if (brightness > max) max = brightness;
+      sum += brightness;
+      count++;
+    }
+  }
+  const range = max - min;
+  const mean = count > 0 ? sum / count : 0;
+  // Real cameras produce ≥3 brightness range from sensor noise alone, even with
+  // the lens covered; computationally uniform streams (Phone Link with sleeping
+  // phone) sit at exactly 0. Accept anything ≥3.
+  return { alive: range >= 3, range, mean };
 }
