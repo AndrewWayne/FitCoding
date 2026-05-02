@@ -2,6 +2,10 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 9 (commit 28db305 — angles.ts)
+
+- **Zero-magnitude sentinel**: `angleAtVertex` returns `0` when one of the rays has zero magnitude. `0` is also a valid result (collinear-same-side), so callers can't distinguish degenerate input from a real 0° pose. Consider returning `NaN` — propagates naturally and forces consumers to handle the case explicitly. Coordinate the change with all callers in Tasks 11-13 if changing.
+
 ## From Plan Task 8 (commit 3ee90b4 — HTML/CSS layout)
 
 - **CRITICAL FOR TASK 16**: The `#skeleton` canvas is 400×400 but `#cam` video is 360×360. The skeleton sits centered with `left: 50%; translateX(-50%)`, leaving a 20px margin on each side. Pose landmarks normalized to `[0, 1]` must be drawn at `landmark.x * 360` (not 400) to align with the video frame. When implementing `webcam.ts::drawSkeleton()` in Task 16, factor in this offset — either render to a 360-coord space or shift by 20px on each axis. Otherwise joints will appear ~20px off near the edges.
