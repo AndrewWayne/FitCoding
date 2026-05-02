@@ -2,6 +2,11 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 17 (commit 82e8437 — pixelman.ts) — apply at Task 21
+
+- **Await sprite preload**: `pixelMan.draw()` no-ops silently when the sprite isn't loaded. Task 21's main.ts must `await pixelMan.setSpriteUrl(...)` before entering the rAF loop, otherwise the canvas stays blank until the image loads.
+- **Catch sprite load errors**: `setSpriteUrl` rejects on 404/network failure. Task 21 should `.catch(err => console.warn(...))` and ideally show a placeholder via the overlay.
+
 ## From Plan Task 16 (commit e537e60 — webcam.ts)
 
 - **MUST VERIFY at end-to-end smoke test (Task 28)**: webcam stream is requested at 640×480 (4:3) but displayed at 360×360 (1:1) via CSS `object-fit: cover`, which center-crops 80px from each side. MediaPipe landmarks are normalized over the full 4:3 frame, so landmarks near the cropped edges may render outside the visible video region. If skeleton visibly drifts during smoke test, fix by requesting a square stream (`getUserMedia({video: {width: 480, height: 480}})`) or by accounting for the crop offset in `drawSkeleton`.
