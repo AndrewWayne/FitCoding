@@ -1868,6 +1868,8 @@ const SKELETON_EDGES: ReadonlyArray<readonly [number, number]> = [
   [23, 25], [25, 27], [24, 26], [26, 28],                    // legs
 ];
 
+const VIDEO_DISPLAY_SIZE = 360;
+
 export interface Webcam {
   video: HTMLVideoElement;
   start(): Promise<void>;
@@ -1901,7 +1903,12 @@ export function createWebcam(
       ctx.clearRect(0, 0, w, h);
       if (!landmarks) return;
 
-      // Mirror to match the mirrored video.
+      // Render into the 360x360 region centered in the 400x400 canvas so the
+      // skeleton aligns with the video (which is displayed at 360x360 — see Task 8 CSS).
+      const offsetX = (w - VIDEO_DISPLAY_SIZE) / 2;
+      const offsetY = (h - VIDEO_DISPLAY_SIZE) / 2;
+
+      // Mirror the X axis to match the mirrored video.
       ctx.save();
       ctx.translate(w, 0);
       ctx.scale(-1, 1);
@@ -1914,8 +1921,8 @@ export function createWebcam(
         if (!la || !lb) continue;
         if (la.visibility < 0.3 || lb.visibility < 0.3) continue;
         ctx.beginPath();
-        ctx.moveTo(la.x * w, la.y * h);
-        ctx.lineTo(lb.x * w, lb.y * h);
+        ctx.moveTo(offsetX + la.x * VIDEO_DISPLAY_SIZE, offsetY + la.y * VIDEO_DISPLAY_SIZE);
+        ctx.lineTo(offsetX + lb.x * VIDEO_DISPLAY_SIZE, offsetY + lb.y * VIDEO_DISPLAY_SIZE);
         ctx.stroke();
       }
 
@@ -1923,7 +1930,7 @@ export function createWebcam(
       for (const lm of landmarks) {
         if (lm.visibility < 0.3) continue;
         ctx.beginPath();
-        ctx.arc(lm.x * w, lm.y * h, 4, 0, Math.PI * 2);
+        ctx.arc(offsetX + lm.x * VIDEO_DISPLAY_SIZE, offsetY + lm.y * VIDEO_DISPLAY_SIZE, 4, 0, Math.PI * 2);
         ctx.fill();
       }
 
