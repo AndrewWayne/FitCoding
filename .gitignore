@@ -6,6 +6,9 @@ node_modules/
 dist/
 *.log
 
+# TS shadow output (we use Vite, never check in *.js next to *.ts)
+app/src/**/*.js
+
 # Rust / Tauri
 target/
 **/*.rs.bk
