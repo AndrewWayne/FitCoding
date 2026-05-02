@@ -2,6 +2,11 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## Compiler warnings to clean up before tagging
+
+- `app/src-tauri/src/board.rs:1` — `use crate::scores::{Session, ScoresFile};` flags `Session` as unused at the file level (it's only consumed in `#[cfg(test)] mod tests`). Move `use super::Session;` into the test module to silence cleanly.
+- `app/src-tauri/src/scores.rs:36` — `pub fn append` is currently unused. Will be consumed by the Tauri `save_score` IPC handler in Phase 5 / Task 20. Warning resolves itself then; don't `#[allow]` it.
+
 ## From Plan Task 5 (commit 32b4c1b — board.rs)
 
 - **board.rs test `sums_multiple_sessions_for_same_day_and_exercise`** — `today_row.contains("5")` passes only because 22 doesn't contain 5. Change a fixture value and the test passes for the wrong reason. Replace with a tokenized check (split row by whitespace, compare cells) or assert against the exact padded substring.
