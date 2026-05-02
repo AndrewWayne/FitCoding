@@ -2,6 +2,13 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 27 (commit 3ed6221 — README.md)
+
+- **Privacy section omits the jsDelivr WASM fetch.** `pose/index.ts:7` loads MediaPipe's WASM runtime from `cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm` on first launch — only the `.task` model file is mentioned. Add a one-line disclosure: "MediaPipe WASM runtime is fetched from jsDelivr (cdn.jsdelivr.net) on first launch."
+- **Binary size estimate (~10–20 MB) is unverified.** Replace with measured size after the first real release artifact lands.
+- **macOS Gatekeeper framing.** README says "After first launch, if macOS blocks it" — Gatekeeper actually blocks BEFORE first launch. Reword to "If macOS blocks the binary on first launch attempt..."
+- **Linux camera-permission story is silent.** macOS gets a note about the permission prompt; Linux/Windows don't. Browser/WebView camera prompts on Linux can be surprising in a frameless Tauri window.
+
 ## From Plan Task 26 (commit 28ac238 — release.yml)
 
 - **Smoke-test the workflow via `workflow_dispatch` BEFORE the first `v*.*.*` tag push.** Specifically validates the Ubuntu apt list against an actual Tauri 2 build — the most common silent-failure mode is missing `libsoup-3.0-dev` or `libjavascriptcoregtk-4.1-dev`. Cheaper to find on a manual trigger than via a half-failed Release.
