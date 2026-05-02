@@ -2,6 +2,20 @@
 
 Polish items deferred from code-quality reviews during v0.0.1 execution. None block release; address before tagging or in v0.0.2.
 
+## From Plan Task 26 (commit 28ac238 — release.yml)
+
+- **Smoke-test the workflow via `workflow_dispatch` BEFORE the first `v*.*.*` tag push.** Specifically validates the Ubuntu apt list against an actual Tauri 2 build — the most common silent-failure mode is missing `libsoup-3.0-dev` or `libjavascriptcoregtk-4.1-dev`. Cheaper to find on a manual trigger than via a half-failed Release.
+- **Add `cargo build --locked`** to the release build step. Mirrors `npm ci`'s lockfile-strict pattern. Without `--locked`, CI may quietly update `Cargo.lock` if a transitive dep is yanked, breaking reproducibility of release artifacts.
+- **Add concurrency guard** to prevent races on rapid tag re-pushes:
+  ```yaml
+  concurrency:
+    group: release-${{ github.ref }}
+    cancel-in-progress: false
+  ```
+- **Add `Swatinem/rust-cache@v2`** after the toolchain step — typically halves matrix wall time on Tauri projects. v0.0.2 polish; v0.0.1 ships fine without it.
+- **One-line comment** in the release job explaining why no `actions/checkout` (intentional — softprops uses GitHub API, no local refs needed).
+- **`macos-13` runner deprecation horizon**: GitHub announced sunset; before v0.0.2, switch to `macos-latest` cross-build with `MACOSX_DEPLOYMENT_TARGET` env to keep min-OS sane.
+
 ## From Plan Task 24 (commit 910081f — fit.ps1)
 
 - **`-WindowStyle Hidden` is semantically wrong** for Tauri launch — Tauri opens its own visible GUI window; the `-WindowStyle` flag affects only console-mode parents. Drop the flag: `Start-Process -FilePath $Bin -ArgumentList "launch"` returns immediately and doesn't hide anything.
