@@ -18,7 +18,11 @@ detect_target() {
     Darwin-arm64)
       TARGET="aarch64-apple-darwin"; EXT=""; ARCHIVE="tar.gz" ;;
     Darwin-x86_64)
-      TARGET="x86_64-apple-darwin"; EXT=""; ARCHIVE="tar.gz" ;;
+      # No native Intel-Mac build is shipped in v0.0.2 (macos-13 runner is
+      # deprecation-queue capacity-starved). Intel Macs can run the arm64
+      # binary under Rosetta 2 — fall through to that target.
+      TARGET="aarch64-apple-darwin"; EXT=""; ARCHIVE="tar.gz"
+      echo "fitcoding: no native Intel-Mac binary; using arm64 build under Rosetta 2" >&2 ;;
     Linux-x86_64)
       TARGET="x86_64-unknown-linux-gnu"; EXT=""; ARCHIVE="tar.gz" ;;
     MINGW64_NT*-x86_64|MSYS_NT*-x86_64|CYGWIN_NT*-x86_64)

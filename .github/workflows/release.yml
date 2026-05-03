@@ -29,10 +29,12 @@ jobs:
             target: aarch64-apple-darwin
             archive: tar.gz
             ext: ""
-          - os: macos-13
-            target: x86_64-apple-darwin
-            archive: tar.gz
-            ext: ""
+          # macos-13 (Intel macOS) deferred: GitHub-hosted macos-13 runners are
+          # in the deprecation queue and have so little capacity that release
+          # runs hang for hours waiting to schedule. Intel Mac users can run
+          # the arm64 build under Rosetta 2 (Tauri 2 supports it) until we
+          # cross-compile from macos-14 with a deployment target override in
+          # v0.0.3.
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             archive: tar.gz

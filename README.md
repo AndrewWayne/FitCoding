@@ -14,7 +14,7 @@ The first time you run `/fit`, a small native binary (~10–20 MB) is downloaded
 
 ### macOS
 
-The bundled binary is unsigned. After first launch, if macOS blocks it:
+Native arm64 (Apple Silicon) binary only — Intel Macs run the same arm64 binary under Rosetta 2 (Tauri 2 supports this). Native Intel build returns in v0.0.3. The bundled binary is unsigned; if Gatekeeper blocks it on first launch attempt:
 
 ```
 xattr -d com.apple.quarantine ~/.fitcoding/bin/fitcoding
@@ -24,7 +24,7 @@ You'll also see a one-time camera-permission prompt — grant it; the model runs
 
 ### Windows
 
-SmartScreen may show a "Windows protected your PC" notice on the very first run. Click _More info → Run anyway_.
+SmartScreen may show a "Windows protected your PC" notice on the very first run. Click _More info → Run anyway_. The slash command runs the bootstrap script via Git Bash (bundled with Git for Windows); install Git Bash if you don't already have it.
 
 ### Linux
 
