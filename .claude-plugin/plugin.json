@@ -1,8 +1,10 @@
 {
   "name": "fitcoding",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "/fit pops a 30-second exercise mini-game; /fit board prints the daily scoreboard.",
-  "author": "AndrewWayne",
+  "author": {
+    "name": "AndrewWayne"
+  },
   "license": "MIT",
   "homepage": "https://github.com/AndrewWayne/FitCoding"
 }
