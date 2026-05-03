@@ -47,6 +47,27 @@ export function createPushup(): ExerciseModule {
         return { reps, phase, progress: 0 };
       }
 
+      // Posture filter: only count if user is actually in a push-up position
+      // (torso roughly horizontal). If hips are visible and the torso is more
+      // vertical than horizontal, the user is standing/sitting and any arm
+      // motion shouldn't be counted as a push-up. Without this, sitting at a
+      // desk and gesturing produces dozens of false reps per session.
+      const hipL = landmarks[LM.LEFT_HIP];
+      const hipR = landmarks[LM.RIGHT_HIP];
+      if (vis(hipL) && vis(hipR)) {
+        const shMidX = ((shL?.x ?? 0) + (shR?.x ?? 0)) / 2;
+        const shMidY = ((shL?.y ?? 0) + (shR?.y ?? 0)) / 2;
+        const hipMidX = (hipL!.x + hipR!.x) / 2;
+        const hipMidY = (hipL!.y + hipR!.y) / 2;
+        const dx = Math.abs(shMidX - hipMidX);
+        const dy = Math.abs(shMidY - hipMidY);
+        if (dy > dx) {
+          // Torso vertical → standing/sitting. Reset to ready and don't count.
+          phase = "ready";
+          return { reps, phase, progress: 0 };
+        }
+      }
+
       const progress = clamp01((UP_THRESHOLD - angle) / (UP_THRESHOLD - DOWN_THRESHOLD));
 
       if (angle < DOWN_THRESHOLD) {
