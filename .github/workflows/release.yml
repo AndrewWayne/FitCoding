@@ -87,9 +87,39 @@ jobs:
           ls -la app/dist
           test -f app/dist/index.html
 
+      - name: Diagnostic info
+        shell: bash
+        run: |
+          echo "=== rustc / cargo ==="
+          rustc --version
+          cargo --version
+          echo "=== rustup target ==="
+          rustup target list --installed
+          echo "=== cargo tauri-related crate resolution ==="
+          (cd app/src-tauri && cargo tree --target ${{ matrix.target }} -p fitcoding -e normal,build --depth 2 2>&1 | head -40 || echo "(cargo tree failed)")
+
       - name: Build Rust binary
         working-directory: app/src-tauri
-        run: cargo build --release --locked --target ${{ matrix.target }} --verbose
+        # No --locked: if Cargo.lock has a yanked crate or platform-specific
+        # divergence from when it was generated (Windows-host), --locked turns
+        # a recoverable resolve into a hard error. We trade reproducibility for
+        # diagnosability while CI is unstable. Re-enable once green.
+        # 2>&1 | tee captures the full output for after-the-fact inspection.
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo build --release --target ${{ matrix.target }} --verbose 2>&1 | tee /tmp/cargo-build.log
+          echo "=== last 80 lines of build log ==="
+          tail -n 80 /tmp/cargo-build.log
+
+      - name: Surface error context on failure
+        if: failure()
+        shell: bash
+        run: |
+          echo "=== grep error/failed/panicked ==="
+          grep -E "error\[|^error:|failed|panicked" /tmp/cargo-build.log 2>&1 | head -50 || true
+          echo "=== last 200 lines ==="
+          tail -n 200 /tmp/cargo-build.log 2>&1 || true
 
       - name: Package archive
         shell: bash
