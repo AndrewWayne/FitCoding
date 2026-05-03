@@ -40,8 +40,28 @@ export function createWebcam(
       };
 
       status("Listing cameras…");
-      const allDevices = await navigator.mediaDevices.enumerateDevices();
+      let allDevices = await navigator.mediaDevices.enumerateDevices();
       let videoInputs = allDevices.filter((d) => d.kind === "videoinput");
+
+      // enumerateDevices() returns devices with EMPTY labels (and sometimes
+      // empty deviceIds) until the page has been granted camera permission.
+      // In production builds the webview origin (tauri://...) is fresh so the
+      // dev-mode permission never carries over. Probe getUserMedia first to
+      // trigger the OS permission prompt, then re-enumerate.
+      const allLabelsEmpty = videoInputs.length > 0 && videoInputs.every((d) => !d.label);
+      if (allLabelsEmpty) {
+        status("Requesting camera permission…");
+        try {
+          const probe = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          probe.getTracks().forEach((t) => t.stop());
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          throw new Error(`camera permission denied or unavailable: ${msg}`);
+        }
+        allDevices = await navigator.mediaDevices.enumerateDevices();
+        videoInputs = allDevices.filter((d) => d.kind === "videoinput");
+      }
+
       status(`Found ${videoInputs.length} camera(s)`);
       videoInputs.forEach((d, i) => {
         console.log(`[fitcoding]   [${i}] label=${JSON.stringify(d.label)} id=${d.deviceId.slice(0, 16)}…`);

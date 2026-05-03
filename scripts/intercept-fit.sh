@@ -19,14 +19,16 @@ fi
 
 prompt=$(printf '%s' "$input" | jq -r '.prompt // empty' 2>/dev/null || true)
 
-# Only intercept when the prompt LITERALLY begins with /fit (followed by end,
-# space, or arg). Don't fire on things like "say /fit later".
-if [[ ! "$prompt" =~ ^/fit($|[[:space:]]) ]]; then
+# Match either /fit or /fitcoding:fit (the namespaced form Claude Code
+# generates for plugin slash commands), each optionally followed by args.
+# Don't fire on things like "say /fit later".
+if [[ "$prompt" =~ ^/fit($|[[:space:]]) ]]; then
+  args="${prompt#/fit}"
+elif [[ "$prompt" =~ ^/fitcoding:fit($|[[:space:]]) ]]; then
+  args="${prompt#/fitcoding:fit}"
+else
   exit 0
 fi
-
-# Strip the /fit prefix and any leading whitespace.
-args="${prompt#/fit}"
 args="${args# }"
 
 case "$args" in

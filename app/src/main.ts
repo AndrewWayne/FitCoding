@@ -6,7 +6,20 @@ import { createPixelMan } from "./ui/pixelman";
 import { createOverlay } from "./ui/overlay";
 import { runIntroCountdown, runSessionTimer, formatRemaining } from "./ui/timer";
 import { createExercise, isExerciseName } from "./exercises";
+import type { ExerciseName } from "./exercises";
 import { getExercise, saveScore } from "./ipc";
+
+// Static imports give Vite the URLs to bundle/hash at build time. /src/* paths
+// only work in dev; production needs proper asset handling.
+import squatSprite from "./assets/sprites/squat.png";
+import jumpingJackSprite from "./assets/sprites/jumping_jack.png";
+import pushupSprite from "./assets/sprites/pushup.png";
+
+const SPRITES: Record<ExerciseName, string> = {
+  squat: squatSprite,
+  jumping_jack: jumpingJackSprite,
+  pushup: pushupSprite,
+};
 
 // Pipe webview console output into the Tauri stdout stream so we can read it
 // from outside the app. The Rust `log` command does eprintln!.
@@ -61,7 +74,7 @@ async function main() {
   const pixelMan = createPixelMan(pixelEl);
   const webcam = createWebcam(camEl, skeletonEl);
 
-  await pixelMan.setSpriteUrl(`/src/assets/sprites/${exerciseName}.png`);
+  await pixelMan.setSpriteUrl(SPRITES[exerciseName]);
   pixelMan.draw(0);
 
   overlay.showText("Allow camera access to begin");

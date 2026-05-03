@@ -1,6 +1,6 @@
 [package]
 name = "fitcoding"
-version = "0.0.1"
+version = "0.0.4"
 edition = "2021"
 description = "FitCoding — /fit pop-up exercise mini-game for Claude Code"
 license = "MIT"
@@ -13,7 +13,13 @@ path = "src/main.rs"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+# `custom-protocol` is REQUIRED for plain `cargo build --release` to serve
+# the embedded frontendDist instead of trying to reach devUrl (localhost:1420).
+# Without it, release binaries silently fall back to devUrl and fail with
+# "localhost refused the connection" on every launch. `cargo tauri build`
+# enables this feature implicitly via `--features tauri/custom-protocol`,
+# but our CI uses plain cargo, so we declare it here.
+tauri = { version = "2", features = ["custom-protocol"] }
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
