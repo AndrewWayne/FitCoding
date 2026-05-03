@@ -12,23 +12,23 @@ A Claude Code plugin: while Claude is thinking, type `/fit` to interrupt yoursel
 
 The first time you run `/fit`, a small native binary (~10–20 MB) is downloaded from this repo's GitHub Releases into `~/.fitcoding/bin/` and reused after that.
 
-### macOS
+### Platform support (v0.0.2)
 
-Native arm64 (Apple Silicon) binary only — Intel Macs run the same arm64 binary under Rosetta 2 (Tauri 2 supports this). Native Intel build returns in v0.0.3. The bundled binary is unsigned; if Gatekeeper blocks it on first launch attempt:
+**Windows x64** is the only fully-supported platform in v0.0.2. Linux + macOS arm64 builds are pending CI debugging — both can build the binary locally from source:
 
 ```
-xattr -d com.apple.quarantine ~/.fitcoding/bin/fitcoding
+git clone https://github.com/AndrewWayne/FitCoding && cd FitCoding/app
+npm ci && npm run build
+cd src-tauri && cargo build --release
+mkdir -p ~/.fitcoding/bin
+cp target/release/fitcoding ~/.fitcoding/bin/
 ```
 
-You'll also see a one-time camera-permission prompt — grant it; the model runs locally.
+After that, the slash command (or running `~/.fitcoding/bin/fitcoding launch` directly) works the same as the Windows install path.
 
 ### Windows
 
 SmartScreen may show a "Windows protected your PC" notice on the very first run. Click _More info → Run anyway_. The slash command runs the bootstrap script via Git Bash (bundled with Git for Windows); install Git Bash if you don't already have it.
-
-### Linux
-
-Requires WebKit2GTK 4.1 (`libwebkit2gtk-4.1-0` on Debian/Ubuntu).
 
 ## Usage
 
