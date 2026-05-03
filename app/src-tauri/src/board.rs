@@ -1,4 +1,6 @@
-use crate::scores::{Session, ScoresFile};
+use crate::scores::ScoresFile;
+#[cfg(test)]
+use crate::scores::Session;
 use chrono::{Duration, NaiveDate};
 use std::collections::BTreeMap;
 
