@@ -1,0 +1,14 @@
+{
+  "name": "fitcoding-marketplace",
+  "owner": {
+    "name": "AndrewWayne"
+  },
+  "plugins": [
+    {
+      "name": "fitcoding",
+      "source": "./",
+      "description": "/fit pops a 30-second exercise mini-game (squat, jumping jack, push-up) with webcam-based pose detection. /fit board prints the daily scoreboard.",
+      "version": "0.0.2"
+    }
+  ]
+}
