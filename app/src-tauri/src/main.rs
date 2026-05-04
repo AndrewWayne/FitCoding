@@ -1,8 +1,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+#[cfg(target_os = "macos")]
+embed_plist::embed_info_plist!("../Info.plist");
+
 mod scores;
 mod board;
 mod launch;
+
+#[cfg(target_os = "macos")]
+mod macos_disclaim;
 
 use clap::{Parser, Subcommand};
 
@@ -29,6 +35,9 @@ fn main() {
     let cli = Cli::parse();
     match cli.command.unwrap_or(Cmd::Launch { exercise: None }) {
         Cmd::Launch { exercise } => {
+            #[cfg(target_os = "macos")]
+            macos_disclaim::reexec_if_needed();
+
             let chosen = launch::resolve_exercise(exercise);
             launch::run(chosen);
         }

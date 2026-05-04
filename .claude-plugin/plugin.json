@@ -1,6 +1,6 @@
 {
   "name": "fitcoding",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "/fit pops a 30-second exercise mini-game; /fit board prints the daily scoreboard.",
   "author": {
     "name": "AndrewWayne"
